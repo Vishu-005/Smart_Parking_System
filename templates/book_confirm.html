@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Booking - Smart Parking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .navbar-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-custom {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .confirmation-details {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="#">Smart Parking</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('book_payment') }}">← Back to Payment</a>
+                <span class="navbar-text me-3">Welcome, {{ current_user.email }}!</span>
+                <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card card-custom">
+                    <div class="card-header text-center">
+                        <h3>Confirm Your Booking</h3>
+                        <p class="text-muted mb-0">Please review your booking details</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="confirmation-details">
+                            <h5>Booking Details</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Slot:</strong> <span id="confirm-slot"></span></p>
+                                    <p><strong>Date:</strong> <span id="confirm-date"></span></p>
+                                    <p><strong>Start Time:</strong> <span id="confirm-time"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Duration:</strong> <span id="confirm-duration"></span></p>
+                                    <p><strong>Payment Method:</strong> <span id="confirm-payment"></span></p>
+                                    <p><strong>Total Cost:</strong> <span id="confirm-cost"></span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Important:</strong> By confirming this booking, you agree to the parking terms and conditions.
+                        </div>
+
+                        <div class="text-center">
+                            <button type="button" class="btn btn-secondary me-2" onclick="goBack()">Back</button>
+                            <button type="button" class="btn btn-success" onclick="confirmBooking()">Confirm Booking</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Booking Confirmed!</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <p>Your parking slot has been successfully booked!</p>
+                    <p class="text-muted">Booking ID: <strong id="booking-id"></strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="goToDashboard()">Go to Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadConfirmationDetails() {
+            const selectedSlotName = sessionStorage.getItem('selectedSlotName');
+            const bookingDate = sessionStorage.getItem('bookingDate');
+            const bookingDuration = sessionStorage.getItem('bookingDuration');
+            const bookingStartTime = sessionStorage.getItem('bookingStartTime');
+            const paymentMethod = sessionStorage.getItem('paymentMethod');
+            const pricePerHour = parseFloat(sessionStorage.getItem('selectedPricePerHour'));
+            const vehicleNumber = sessionStorage.getItem('vehicleNumber');
+
+            if (!selectedSlotName || !bookingDate || !bookingDuration || !bookingStartTime || !paymentMethod) {
+                // Missing booking info, redirect back
+                window.location.href = '/book/payment';
+                return;
+            }
+
+            const totalCost = pricePerHour * parseInt(bookingDuration);
+            const formattedDate = new Date(bookingDate).toLocaleDateString();
+
+            document.getElementById('confirm-slot').textContent = selectedSlotName;
+            document.getElementById('confirm-date').textContent = formattedDate;
+            document.getElementById('confirm-time').textContent = bookingStartTime;
+            document.getElementById('confirm-duration').textContent = `${bookingDuration} hour(s)`;
+            document.getElementById('confirm-payment').textContent = paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1);
+            document.getElementById('confirm-cost').textContent = `$${totalCost.toFixed(2)}`;
+            
+            // Add vehicle number to confirmation display
+            const vehicleNumberElement = document.createElement('p');
+            vehicleNumberElement.innerHTML = `<strong>Vehicle Number:</strong> <span>${vehicleNumber || 'Not provided'}</span>`;
+            document.querySelector('.confirmation-details .row').parentElement.insertBefore(vehicleNumberElement, document.querySelector('.confirmation-details .row'));
+        }
+
+        function goBack() {
+            window.location.href = '/book/payment';
+        }
+
+        async function confirmBooking() {
+            const selectedSlotId = sessionStorage.getItem('selectedSlotId');
+            const bookingDate = sessionStorage.getItem('bookingDate');
+            const bookingDuration = sessionStorage.getItem('bookingDuration');
+            const bookingStartTime = sessionStorage.getItem('bookingStartTime');
+            const paymentMethod = sessionStorage.getItem('paymentMethod');
+            const vehicleNumber = sessionStorage.getItem('vehicleNumber');
+
+            // Compose start and end datetime
+            const startDateTime = new Date(`${bookingDate}T${bookingStartTime}`);
+            const endDateTime = new Date(startDateTime.getTime() + parseInt(bookingDuration) * 60 * 60 * 1000);
+
+            try {
+                const response = await fetch('/api/book', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        slot_id: selectedSlotId,
+                        start: startDateTime.toISOString(),
+                        end: endDateTime.toISOString(),
+                        vehicle_number: vehicleNumber,
+                        payment_method: paymentMethod
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Clear session storage
+                    sessionStorage.clear();
+
+                    // Show success modal
+                    document.getElementById('booking-id').textContent = result.booking_id || '';
+                    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                    successModal.show();
+                } else {
+                    alert('Booking failed: ' + (result.message || result.error));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while booking. Please try again.');
+            }
+        }
+
+        function goToDashboard() {
+            window.location.href = '/';
+        }
+
+        // Initialize the page
+        loadConfirmationDetails();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Smart Parking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .navbar-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-custom {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-custom {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        /* bookings section fixed height with internal scroll */
+        .bookings-card .card-body {
+            max-height: 400px;
+            /* fixed height */
+            padding: 0;
+            /* reduce extra space if desired */
+        }
+
+        .bookings-card .table-responsive {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* recent uploads styling */
+        .uploads-container {
+            width: 80%;
+            margin: 20px auto;
+        }
+
+        .uploads-header table,
+        .uploads-body table {
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .uploads-body {
+            max-height: 350px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* bookings fixed-layout container mimicking uploads */
+        .bookings-container {
+            width: 80%;
+            margin: 20px auto;
+        }
+
+        .bookings-header table,
+        .bookings-body table {
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .bookings-body {
+            max-height: 350px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="#">Smart Parking - Admin</a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">Welcome, {{ current_user.email }}!</span>
+                <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Admin Dashboard</h1>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card card-custom">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Parking Slots</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Parking layout diagram (6 slots) -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-start mb-2">
+                                <div style="width:22%;"></div>
+                                <div class="d-flex" style="gap:16px;">
+                                    <div
+                                        style="width:100px;height:80px;background:#dbeffd;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                                        <div style="font-weight:700;font-size:20px;">1</div>
+                                        <small class="text-muted">Handicapped</small>
+                                    </div>
+                                    <div
+                                        style="width:100px;height:80px;background:#dbeffd;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                                        <div style="font-weight:700;font-size:20px;">2</div>
+                                        <small class="text-muted">Handicapped</small>
+                                    </div>
+                                    <div
+                                        style="width:100px;height:80px;background:#e9f7ef;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                                        <div style="font-weight:700;font-size:20px;">3</div>
+                                        <small class="text-muted">Regular</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-start" style="gap:16px; margin-left:22%;">
+                                <div
+                                    style="width:100px;height:80px;background:#e9f7ef;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                                    <div style="font-weight:700;font-size:20px;">4</div>
+                                    <small class="text-muted">Regular</small>
+                                </div>
+                                <div
+                                    style="width:100px;height:80px;background:#e8f5e9;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                                    <div style="font-weight:700;font-size:20px;">5</div>
+                                    <small class="text-muted">EV</small>
+                                </div>
+                                <div
+                                    style="width:100px;height:80px;background:#e8f5e9;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                                    <div style="font-weight:700;font-size:20px;">6</div>
+                                    <small class="text-muted">EV</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-custom">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Slot Number</th>
+                                        <th>Status</th>
+                                        <th>Location</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for s in slots %}
+                                    {% if 1 <= s.slot_number <=6 %} <tr>
+                                        <td>{{ s.slot_number }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if s.status == 'empty' else 'danger' }}">
+                                                {{ s.status }}
+                                            </span>
+                                        </td>
+                                        <td>{{ s.latitude }}, {{ s.longitude }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card card-custom mt-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">Bookings</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Flash messages for clearing bookings -->
+                        {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-info alert-dismissible fade show mx-3 mt-2" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                        {% endwith %}
+
+                        <div class="d-flex justify-content-between align-items-center mb-3 mx-3">
+                            <h6 class="mb-0 text-muted">History</h6>
+                            <form action="{{ url_for('clear_bookings') }}" method="POST"
+                                onsubmit="return confirm('Are you sure you want to delete all booking history? This cannot be undone.');">
+                                <button type="submit" class="btn btn-danger btn-sm">Clear Booking History</button>
+                            </form>
+                        </div>
+
+                        <div class="bookings-container">
+                            <div class="bookings-header">
+                                <table class="table table-custom">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Slot Number</th>
+                                            <th>Start Time</th>
+                                            <th>End Time</th>
+                                            <th>Vehicle Number</th>
+                                            <th>Booked By</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                            <div class="bookings-body">
+                                <table class="table table-custom">
+                                    <tbody>
+                                        {% for b in bookings %}
+                                        <tr>
+                                            <td>{{ b.slot.slot_number }}</td>
+                                            <td>{{ b.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>{{ b.end_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>{{ b.vehicle_number or '-' }}</td>
+                                            <td>{{ b.user.email }}</td>
+                                            <td>
+                                                {% if b.status == 'cancelled' %}
+                                                <span class="badge bg-danger">Cancelled</span>
+                                                {% elif b.end_time > now %}
+                                                <span class="badge bg-success">Upcoming</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">Completed</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card card-custom mt-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="card-title mb-0">Recent Plate Uploads</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if plate_images %}
+                        <div class="uploads-container">
+                            <div class="uploads-header">
+                                <table class="table table-custom">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Original</th>
+                                            <th>Processed</th>
+                                            <th>Plate Text</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                            <div class="uploads-body">
+                                <table class="table table-custom">
+                                    <tbody>
+                                        {% for p in plate_images %}
+                                        <tr>
+                                            <td>{{ p.created_at.strftime('%H:%M:%S') }}<br><small class="text-muted">{{
+                                                    p.created_at.strftime('%Y-%m-%d') }}</small></td>
+                                            <td>
+                                                {% if p.original_url %}
+                                                <a href="{{ p.original_url }}" target="_blank">
+                                                    <img src="{{ p.original_url }}"
+                                                        style="height:60px; border-radius:4px; border: 1px solid #ddd;" />
+                                                </a>
+                                                {% else %}
+                                                -
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if p.processed_url %}
+                                                <a href="{{ p.processed_url }}" target="_blank">
+                                                    <img src="{{ p.processed_url }}"
+                                                        style="height:60px; border-radius:4px; border: 1px solid #ddd;" />
+                                                </a>
+                                                {% else %}
+                                                -
+                                                {% endif %}
+                                            </td>
+                                            <td class="fw-bold text-primary"
+                                                style="font-size: 1.1rem; letter-spacing: 1px;">
+                                                {{ p.plate_text or '-' }}
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-success btn-sm" onclick="openGate()">Open
+                                                    Gate</button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-muted">No plate uploads yet.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function openGate() {
+            fetch('/admin/open_gate', {
+                method: 'POST'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Gate opened successfully');
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while opening the gate');
+                });
+        }
+    </script>
+</body>
+
+</html>

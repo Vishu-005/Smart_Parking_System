@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture Plate - Smart Parking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        body {
+            background: var(--secondary-gradient);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .capture-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            padding: 30px;
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header-icon {
+            font-size: 50px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .camera-btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .camera-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .camera-btn:active {
+            transform: translateY(0);
+        }
+
+        #imagePreview {
+            width: 100%;
+            margin-top: 20px;
+            border-radius: 12px;
+            display: none;
+            border: 2px solid #eee;
+        }
+
+        .status-container {
+            margin-top: 25px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .result-badge {
+            display: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 16px;
+            animation: bounceIn 0.5s ease;
+        }
+
+        .authorized {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+
+        .denied {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+
+            70% {
+                transform: scale(0.9);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Hidden file input */
+        #fileInput {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="capture-card">
+        <div class="header-icon">
+            <i class="fas fa-camera"></i>
+        </div>
+        <h2>Gate Control</h2>
+        <p>Capture your number plate to open the gate automatically.</p>
+
+        <button class="camera-btn" onclick="document.getElementById('fileInput').click()">
+            <i class="fas fa-camera-retro me-2"></i> Open Camera
+        </button>
+
+        <input type="file" id="fileInput" accept="image/*" capture="environment" onchange="previewAndUpload(event)">
+
+        <img id="imagePreview" src="" alt="Preview">
+
+        <div class="status-container">
+            <div id="spinner" class="spinner"></div>
+            <div id="statusText" class="text-muted"></div>
+            <div id="resultBadge" class="result-badge"></div>
+        </div>
+
+        <div class="mt-4">
+            <small class="text-muted">Smart Parking System v2.0</small>
+        </div>
+    </div>
+
+    <script>
+        function previewAndUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Show preview
+            const reader = new FileReader();
+            const preview = document.getElementById('imagePreview');
+            const spinner = document.getElementById('spinner');
+            const statusText = document.getElementById('statusText');
+            const resultBadge = document.getElementById('resultBadge');
+
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+
+            // Reset UI
+            resultBadge.style.display = 'none';
+            statusText.innerText = 'Uploading and processing...';
+            spinner.style.display = 'block';
+
+            // Upload
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/api/upload_plate', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    spinner.style.display = 'none';
+                    statusText.innerText = '';
+
+                    resultBadge.style.display = 'block';
+                    if (data.status === 'AUTHORIZED') {
+                        resultBadge.className = 'result-badge authorized';
+                        resultBadge.innerHTML = `<i class="fas fa-check-circle me-2"></i> ACCESS GRANTED<br><small>${data.vehicle_number}</small>`;
+                        statusText.innerText = 'Gate is opening...';
+                    } else {
+                        resultBadge.className = 'result-badge denied';
+                        resultBadge.innerHTML = `<i class="fas fa-times-circle me-2"></i> ACCESS DENIED<br><small>${data.vehicle_number || 'Could not read plate'}</small>`;
+                        statusText.innerText = data.error || 'No active booking found.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    spinner.style.display = 'none';
+                    statusText.innerText = 'Error connecting to server.';
+                });
+        }
+    </script>
+</body>
+
+</html>

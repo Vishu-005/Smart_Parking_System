@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Method - Smart Parking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .navbar-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-custom {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .payment-option {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .payment-option:hover {
+            border-color: #667eea;
+            background-color: #f8f9fa;
+        }
+        .payment-option.selected {
+            border-color: #667eea;
+            background-color: #e7f3ff;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="#">Smart Parking</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('book_datetime') }}">← Back to Date & Time</a>
+                <span class="navbar-text me-3">Welcome, {{ current_user.email }}!</span>
+                <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card card-custom">
+                    <div class="card-header text-center">
+                        <h3>Select Payment Method</h3>
+                        <p class="text-muted mb-0">Choose how you'd like to pay</p>
+                    </div>
+                    <div class="card-body">
+                        <div id="booking-summary" class="alert alert-info mb-4">
+                            <!-- Booking summary will be shown here -->
+                        </div>
+
+                        <div class="payment-options">
+                            <div class="payment-option" data-method="card">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-credit-card fa-2x text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">Credit/Debit Card</h5>
+                                        <p class="mb-0 text-muted">Pay securely with your card</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="payment-option" data-method="upi">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-mobile-alt fa-2x text-success"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">UPI</h5>
+                                        <p class="mb-0 text-muted">Pay using UPI apps like Google Pay, PhonePe</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="payment-option" data-method="wallet">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-wallet fa-2x text-warning"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">Digital Wallet</h5>
+                                        <p class="mb-0 text-muted">Pay using Paytm, Amazon Pay, etc.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="button" class="btn btn-secondary me-2" onclick="goBack()">Back</button>
+                            <button type="button" class="btn btn-primary" id="continue-btn" disabled>Continue to Confirmation</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedPaymentMethod = null;
+
+        function loadBookingSummary() {
+            const selectedSlotName = sessionStorage.getItem('selectedSlotName');
+            const bookingDate = sessionStorage.getItem('bookingDate');
+            const bookingDuration = sessionStorage.getItem('bookingDuration');
+            const bookingStartTime = sessionStorage.getItem('bookingStartTime');
+            const pricePerHour = parseFloat(sessionStorage.getItem('selectedPricePerHour'));
+            const vehicleNumber = sessionStorage.getItem('vehicleNumber');
+
+            if (!selectedSlotName || !bookingDate || !bookingDuration || !bookingStartTime) {
+                // Missing booking info, redirect back
+                window.location.href = '/book/datetime';
+                return;
+            }
+
+            const totalCost = pricePerHour * parseInt(bookingDuration);
+
+            document.getElementById('booking-summary').innerHTML = `
+                <strong>Booking Summary:</strong><br>
+                Slot: ${selectedSlotName}<br>
+                Vehicle Number: ${vehicleNumber || 'Not provided'}<br>
+                Date: ${new Date(bookingDate).toLocaleDateString()}<br>
+                Time: ${bookingStartTime}<br>
+                Duration: ${bookingDuration} hour(s)<br>
+                <strong>Total Cost: $${totalCost.toFixed(2)}</strong>
+            `;
+        }
+
+        function selectPaymentMethod(method) {
+            // Remove selected class from all options
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+
+            // Add selected class to clicked option
+            event.currentTarget.classList.add('selected');
+
+            selectedPaymentMethod = method;
+            document.getElementById('continue-btn').disabled = false;
+        }
+
+        function goBack() {
+            window.location.href = '/book/datetime';
+        }
+
+        function continueToConfirmation() {
+            if (!selectedPaymentMethod) {
+                alert('Please select a payment method');
+                return;
+            }
+
+            sessionStorage.setItem('paymentMethod', selectedPaymentMethod);
+            window.location.href = '/book/confirm';
+        }
+
+        // Add click event listeners to payment options
+        document.querySelectorAll('.payment-option').forEach(option => {
+            option.addEventListener('click', function() {
+                selectPaymentMethod(this.getAttribute('data-method'));
+            });
+        });
+
+        // Add click event listener to continue button
+        document.getElementById('continue-btn').addEventListener('click', continueToConfirmation);
+
+        // Initialize the page
+        loadBookingSummary();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</body>
+</html>

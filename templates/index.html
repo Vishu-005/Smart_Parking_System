@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Smart Parking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar-custom {
+            background: linear-gradient(135deg, #4a5f8f 0%, #5a6fa8 100%);
+            box-shadow: 0 4px 12px rgba(74, 95, 143, 0.2);
+        }
+        .navbar-custom .navbar-brand {
+            color: #ffffff !important;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .card-custom {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            background: #ffffff;
+        }
+        .card-custom:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+        }
+        .card-custom .card-header {
+            background: linear-gradient(135deg, #5a6fa8 0%, #6b82b8 100%);
+            border-radius: 15px 15px 0 0;
+            padding: 20px;
+            color: #ffffff;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .card-custom .card-header h5 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 1.3rem;
+        }
+        .card-custom .card-body {
+            background: linear-gradient(to bottom, #fafbfc 0%, #f5f7fb 100%);
+            padding: 25px;
+        }
+        .slot-available {
+            background: linear-gradient(135deg, #d4edda 0%, #c8e6c9 100%);
+            border-color: #81c784;
+        }
+        .slot-occupied {
+            background: linear-gradient(135deg, #f8d7da 0%, #ffcccc 100%);
+            border-color: #e57373;
+        }
+        .btn-custom-primary {
+            background: linear-gradient(135deg, #5a6fa8 0%, #6b82b8 100%);
+            border: none;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-custom-primary:hover {
+            background: linear-gradient(135deg, #4a5f8f 0%, #5a6fa8 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(90, 111, 168, 0.3);
+            transform: translateY(-2px);
+        }
+        .btn-custom-success {
+            background: linear-gradient(135deg, #66bb6a 0%, #56a655 100%);
+            border: none;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-custom-success:hover {
+            background: linear-gradient(135deg, #56a655 0%, #48994a 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 187, 106, 0.3);
+            transform: translateY(-2px);
+        }
+        .btn-custom-info {
+            background: linear-gradient(135deg, #5a7f9d 0%, #6b92b0 100%);
+            border: none;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-custom-info:hover {
+            background: linear-gradient(135deg, #4a6f8d 0%, #5a82a0 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(90, 127, 157, 0.3);
+            transform: translateY(-2px);
+        }
+        .btn-custom-warning {
+            background: linear-gradient(135deg, #a8905d 0%, #b8a070 100%);
+            border: none;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-custom-warning:hover {
+            background: linear-gradient(135deg, #98804d 0%, #a89060 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(168, 144, 93, 0.3);
+            transform: translateY(-2px);
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #5a6fa8 0%, #6b82b8 100%);
+            color: white;
+        }
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="#">Smart Parking</a>
+            <div class="navbar-nav ms-auto">
+                {% if current_user.is_authenticated %}
+                    <a class="nav-link" href="{{ url_for('my_bookings_page') }}">My Bookings</a>
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">Profile</a>
+                    <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Modal -->
+    <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="profileModalLabel">User Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if current_user.is_authenticated %}
+                        <p><strong>Email:</strong> {{ current_user.email }}</p>
+                        <p><strong>Gender:</strong> {{ current_user.gender | capitalize }}</p>
+                        <p><strong>Role:</strong> {{ current_user.role | capitalize }}</p>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Smart Parking System</h1>
+
+        <!-- Parking Lot Visualization -->
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-10">
+                <div class="card card-custom">
+                    <div class="card-header text-center">
+                        <h5>🅿️ Parking Lot Layout</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="{{ url_for('static', filename='parking_lot.svg') }}" alt="Parking Lot Layout" class="parking-lot-img">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Options -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-8">
+                <div class="card card-custom">
+                    <div class="card-header text-center">
+                        <h5>Filter Parking Slots</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
+                            <button class="btn btn-custom-info" onclick="filterSlots('all')">All Slots</button>
+                            <button class="btn btn-custom-success" onclick="filterSlots('ev')">⚡ EV Charging (6, 8, 10)</button>
+                            <button class="btn btn-custom-primary" onclick="filterSlots('handicapped')">♿ Physically Handicapped (1, 2, 3)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Detection Section -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-8">
+                <div class="card card-custom">
+                    <div class="card-header text-center">
+                        <h5>Location Detection</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="mb-3">Click to detect your location and find nearby parking slots</p>
+                        <div class="d-flex justify-content-center gap-3">
+                            <button class="btn btn-custom-success" onclick="getLocation()">Detect My Location</button>
+                            <button class="btn btn-custom-info" onclick="loadAllSlots()">Show All Slots</button>
+                            <button class="btn btn-custom-warning" onclick="clearLocation()">Clear Location</button>
+                        </div>
+                        <div id="location-status" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slots Display -->
+        <div id="slots-container">
+            <!-- Visual parking layout (6 slots) -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-center mb-2">
+                    <div style="width:22%;"></div>
+                    <div class="d-flex" style="gap:16px;">
+                        <div style="width:100px;height:80px;background:#dbeffd;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                            <div style="font-weight:700;font-size:20px;">1</div>
+                            <small class="text-muted">Handicapped</small>
+                        </div>
+                        <div style="width:100px;height:80px;background:#dbeffd;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                            <div style="font-weight:700;font-size:20px;">2</div>
+                            <small class="text-muted">Handicapped</small>
+                        </div>
+                        <div style="width:100px;height:80px;background:#e9f7ef;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                            <div style="font-weight:700;font-size:20px;">3</div>
+                            <small class="text-muted">Regular</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center" style="gap:16px; margin-left:22%;">
+                    <div style="width:100px;height:80px;background:#e9f7ef;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                        <div style="font-weight:700;font-size:20px;">4</div>
+                        <small class="text-muted">Regular</small>
+                    </div>
+                    <div style="width:100px;height:80px;background:#e8f5e9;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                        <div style="font-weight:700;font-size:20px;">5</div>
+                        <small class="text-muted">EV</small>
+                    </div>
+                    <div style="width:100px;height:80px;background:#e8f5e9;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+                        <div style="font-weight:700;font-size:20px;">6</div>
+                        <small class="text-muted">EV</small>
+                    </div>
+                </div>
+            </div>
+            <h2 class="text-center mb-4">Available Parking Slots</h2>
+            <div id="slots" class="row"></div>
+        </div>
+    </div>
+
+    <!-- Date/Time Selection Modal -->
+    <div class="modal fade" id="bookingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Date & Time</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="booking-details" class="mb-3">
+                        <!-- Slot details will be shown here -->
+                    </div>
+                    <form id="booking-form">
+                        <div class="mb-3">
+                            <label for="booking-date" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="booking-date" min="{{ today }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="start-time" class="form-label">Start Time</label>
+                            <select class="form-control" id="start-time" required>
+                                <!-- Time options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="duration" class="form-label">Duration</label>
+                            <select class="form-control" id="duration" required>
+                                <option value="1">1 Hour</option>
+                                <option value="2">2 Hours</option>
+                                <option value="3">3 Hours</option>
+                                <option value="4">4 Hours</option>
+                                <option value="6">6 Hours</option>
+                                <option value="8">8 Hours</option>
+                            </select>
+                        </div>
+
+                        <!-- vehicle number input injected dynamically -->
+                        <div class="mb-3">
+                            <label for="vehicleNumber" class="form-label">Vehicle Number</label>
+                            <input type="text" id="vehicleNumber" class="form-control" placeholder="e.g., TN01AB1234" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-custom-primary" onclick="confirmBooking()">Book Slot</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Payment Gateway</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Booking Summary -->
+                    <div class="card mb-4 bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">Booking Summary</h6>
+                            <p class="mb-1"><strong>Slot Number:</strong> <span id="payment-slot-name"></span></p>
+                            <p class="mb-1"><strong>Start Time:</strong> <span id="payment-start-time"></span></p>
+                            <p class="mb-1"><strong>End Time:</strong> <span id="payment-end-time"></span></p>
+                            <p class="mb-1"><strong>Duration:</strong> <span id="payment-duration"></span> hour(s)</p>
+                            <hr>
+                            <h6 class="text-success"><strong>Total Cost: $<span id="payment-total-cost"></span></strong></h6>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method Selection -->
+                    <h6 class="mb-3">Select Payment Method</h6>
+                    <div class="btn-group w-100 mb-4" role="group">
+                        <input type="radio" class="btn-check" name="payment-method" id="method-card" value="card" checked onchange="showPaymentMethod('card')">
+                        <label class="btn btn-outline-primary" for="method-card">💳 Card</label>
+
+                        <input type="radio" class="btn-check" name="payment-method" id="method-upi" value="upi" onchange="showPaymentMethod('upi')">
+                        <label class="btn btn-outline-primary" for="method-upi">📱 UPI</label>
+
+                        <input type="radio" class="btn-check" name="payment-method" id="method-netbanking" value="netbanking" onchange="showPaymentMethod('netbanking')">
+                        <label class="btn btn-outline-primary" for="method-netbanking">🏦 Net Banking</label>
+
+                        <input type="radio" class="btn-check" name="payment-method" id="method-wallet" value="wallet" onchange="showPaymentMethod('wallet')">
+                        <label class="btn btn-outline-primary" for="method-wallet">👛 Wallet</label>
+                    </div>
+
+                    <!-- Payment Forms -->
+                    <form id="payment-form">
+                        <!-- Card Payment -->
+                        <div id="card-payment" class="payment-method-form">
+                            <div class="mb-3">
+                                <label for="card-number" class="form-label">Card Number</label>
+                                <input type="text" class="form-control" id="card-number" placeholder="1234 5678 9012 3456" maxlength="19">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="expiry-date" class="form-label">Expiry Date</label>
+                                        <input type="text" class="form-control" id="expiry-date" placeholder="MM/YY" maxlength="5">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="cvv" class="form-label">CVV</label>
+                                        <input type="text" class="form-control" id="cvv" placeholder="123" maxlength="4">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- UPI Payment -->
+                        <div id="upi-payment" class="payment-method-form d-none">
+                            <div class="mb-3">
+                                <label for="upi-id" class="form-label">UPI ID</label>
+                                <input type="text" class="form-control" id="upi-id" placeholder="yourname@upi">
+                            </div>
+                            <p class="text-muted small">You will be redirected to your UPI app to complete payment</p>
+                        </div>
+
+                        <!-- Net Banking Payment -->
+                        <div id="netbanking-payment" class="payment-method-form d-none">
+                            <div class="mb-3">
+                                <label for="bank-select" class="form-label">Select Bank</label>
+                                <select class="form-control" id="bank-select">
+                                    <option value="">-- Select Your Bank --</option>
+                                    <option value="hdfc">HDFC Bank</option>
+                                    <option value="icici">ICICI Bank</option>
+                                    <option value="sbi">State Bank of India (SBI)</option>
+                                    <option value="axis">Axis Bank</option>
+                                    <option value="kotak">Kotak Mahindra Bank</option>
+                                    <option value="indusind">IndusInd Bank</option>
+                                    <option value="yes">YES Bank</option>
+                                    <option value="federal">Federal Bank</option>
+                                </select>
+                            </div>
+                            <p class="text-muted small">You will be redirected to your bank's secure portal</p>
+                        </div>
+
+                        <!-- Wallet Payment -->
+                        <div id="wallet-payment" class="payment-method-form d-none">
+                            <div class="mb-3">
+                                <label for="wallet-select" class="form-label">Select Wallet</label>
+                                <select class="form-control" id="wallet-select">
+                                    <option value="">-- Select Your Wallet --</option>
+                                    <option value="paytm">Paytm Wallet</option>
+                                    <option value="phonepe">PhonePe</option>
+                                    <option value="googlepay">Google Pay</option>
+                                    <option value="amazonpay">Amazon Pay</option>
+                                    <option value="mobikwik">MobiKwik</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="wallet-number" class="form-label">Phone Number / Email</label>
+                                <input type="text" class="form-control" id="wallet-number" placeholder="Your registered phone/email">
+                            </div>
+                            <p class="text-muted small">You will be redirected to the wallet app to complete payment</p>
+                        </div>
+                    </form>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-custom-success" onclick="processPayment()">Pay Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userLat = null;
+        let userLng = null;
+        let currentFilter = 'all';
+
+        function getLocation() {
+            const statusDiv = document.getElementById('location-status');
+
+            if (navigator.geolocation) {
+                statusDiv.innerHTML = '<div class="spinner-border spinner-border-sm me-2" role="status"></div>Detecting your location...';
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        userLat = position.coords.latitude;
+                        userLng = position.coords.longitude;
+                        statusDiv.innerHTML = `<div class="alert alert-success">✅ Location detected: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}</div>`;
+                        loadSlots();
+                    },
+                    function(error) {
+                        let errorMessage = 'Location detection failed: ';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage += 'User denied the request for Geolocation.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage += 'Location information is unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage += 'The request to get user location timed out.';
+                                break;
+                            default:
+                                errorMessage += 'An unknown error occurred.';
+                                break;
+                        }
+                        statusDiv.innerHTML = `<div class="alert alert-danger">${errorMessage}</div>`;
+                    }
+                );
+            } else {
+                statusDiv.innerHTML = '<div class="alert alert-warning">Geolocation is not supported by this browser.</div>';
+            }
+        }
+
+        function loadAllSlots() {
+            userLat = null;
+            userLng = null;
+            document.getElementById('location-status').innerHTML = '<div class="alert alert-info">Showing all available slots</div>';
+            loadSlots();
+        }
+
+        function clearLocation() {
+            userLat = null;
+            userLng = null;
+            document.getElementById('location-status').innerHTML = '<div class="alert alert-secondary">Location cleared</div>';
+            loadSlots();
+        }
+
+        function filterSlots(filterType) {
+            currentFilter = filterType;
+            loadSlots();
+        }
+
+        async function loadSlots() {
+            const slotsContainer = document.getElementById("slots");
+            slotsContainer.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div><p>Loading parking slots...</p></div>';
+
+            try {
+                let url = "/api/slots";
+                const params = new URLSearchParams();
+                
+                if (userLat !== null && userLng !== null) {
+                    params.append('lat', userLat);
+                    params.append('lng', userLng);
+                }
+                
+                if (currentFilter !== 'all') {
+                    params.append('filter', currentFilter);
+                }
+                
+                if (params.toString()) {
+                    url += "?" + params.toString();
+                }
+
+                const response = await fetch(url);
+                console.log("API response status:", response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                let slots = await response.json();
+                console.log("Received slots:", slots);
+
+                if (!Array.isArray(slots)) {
+                    throw new Error("Invalid response format");
+                }
+
+                // Filter to only show slots 1-6
+                slots = slots.filter(slot => slot.slot_number >= 1 && slot.slot_number <= 6);
+
+                // Sort slots by slot_number for proper order display
+                slots.sort((a, b) => a.slot_number - b.slot_number);
+
+                slotsContainer.innerHTML = "";
+
+                if (slots.length === 0) {
+                    slotsContainer.innerHTML = '<div class="col-12"><div class="alert alert-info text-center">No parking slots available at the moment.</div></div>';
+                    return;
+                }
+
+                slots.forEach(slot => {
+                    // Priority: physically occupied > in use > available
+                    let statusClass, statusText;
+                    if (slot.physically_occupied) {
+                        statusClass = 'danger';
+                        statusText = 'Occupied';
+                    } else if (slot.in_use) {
+                        statusClass = 'danger';
+                        statusText = 'Currently In Use';
+                    } else if (slot.available) {
+                        statusClass = 'success';
+                        statusText = 'Available';
+                    } else {
+                        statusClass = 'danger';
+                        statusText = 'Not Available';
+                    }
+                    const distanceText = slot.distance ? ` (${slot.distance.toFixed(1)} km away)` : '';
+                    
+                    let slotTypeLabel = '';
+                    let badgeColor = 'secondary';
+                    
+                    if (slot.slot_type === 'ev') {
+                        slotTypeLabel = ' ⚡ EV Charging';
+                        badgeColor = 'success';
+                    } else if (slot.slot_type === 'handicapped') {
+                        slotTypeLabel = ' ♿ Handicapped';
+                        badgeColor = 'info';
+                    }
+
+                    const col = document.createElement("div");
+                    col.className = "col-md-4 mb-4";
+                    col.innerHTML = `
+                        <div class="card h-100 card-custom">
+                            <div class="card-body">
+                                <h5 class="card-title">Slot ${slot.slot_number}${slotTypeLabel}</h5>
+                                <p class="card-text">
+                                    <strong>Type:</strong> <span class="badge bg-${badgeColor}">${slot.slot_type.charAt(0).toUpperCase() + slot.slot_type.slice(1)}</span><br>
+                                    <strong>Location:</strong> ${slot.location}${distanceText}<br>
+                                    <strong>Price:</strong> $${slot.price_per_hour}/hour<br>
+                                        <strong>Status:</strong> <span class="badge bg-${statusClass}">${statusText}</span>
+                                    </p>
+                                    ${(!slot.in_use && slot.available) ? `<button class="btn btn-custom-primary" onclick="bookSlot(${slot.id}, 'Slot ${slot.slot_number}', ${slot.price_per_hour})">Book This Slot</button>` : '<button class="btn btn-secondary" disabled aria-label="Currently Occupied">Currently Occupied</button>'}
+                            </div>
+                        </div>
+                    `;
+                    slotsContainer.appendChild(col);
+                });
+
+            } catch (error) {
+                console.error("Error loading slots:", error);
+                slotsContainer.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-danger text-center">
+                            <h4>❌ Failed to load parking slots</h4>
+                            <p>Error: ${error.message}</p>
+                            <button class="btn btn-custom-warning" onclick="loadSlots()">Retry Loading Slots</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        let selectedSlotId = null;
+        let selectedSlotName = null;
+        let selectedPricePerHour = null;
+
+        function bookSlot(slotId, slotName, pricePerHour) {
+            selectedSlotId = slotId;
+            selectedSlotName = slotName;
+            selectedPricePerHour = pricePerHour;
+
+            // Show slot details in modal
+            document.getElementById('booking-details').innerHTML = `
+                <div class="alert alert-info">
+                    <strong>Selected Slot:</strong> ${slotName}<br>
+                    <strong>Price:</strong> $${pricePerHour}/hour
+                </div>
+            `;
+
+            // clear any previous vehicle number entry
+            const vehInput = document.getElementById('vehicleNumber');
+            if (vehInput) {
+                vehInput.value = '';
+                vehInput.classList.remove('is-invalid');
+            }
+
+            // Populate time options
+            populateTimeOptions();
+
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('booking-date').value = today;
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('bookingModal'));
+            modal.show();
+        }
+
+        function populateTimeOptions() {
+            const timeSelect = document.getElementById("start-time");
+            timeSelect.innerHTML = '';
+
+            for (let hour = 0; hour < 24; hour++) {
+                for (let minute = 0; minute < 60; minute += 30) {
+                    const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                    const option = document.createElement('option');
+                    option.value = timeString;
+                    option.textContent = timeString;
+                    timeSelect.appendChild(option);
+                }
+            }
+        }
+
+        function confirmBooking() {
+            const date = document.getElementById('booking-date').value;
+            const startTime = document.getElementById('start-time').value;
+            const duration = parseInt(document.getElementById('duration').value);
+            const vehicleNumber = document.getElementById('vehicleNumber').value.trim();
+
+            if (!date || !startTime || !duration) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            if (!vehicleNumber) {
+                alert('Please enter vehicle number');
+                document.getElementById('vehicleNumber').focus();
+                return;
+            }
+
+            // Validate date is not in the past
+            const selectedDateTime = new Date(`${date}T${startTime}`);
+            const now = new Date();
+
+            if (selectedDateTime <= now) {
+                alert('Please select a future date and time');
+                return;
+            }
+
+            // Create start and end datetime
+            const endDateTime = new Date(selectedDateTime.getTime() + duration * 60 * 60 * 1000);
+            const totalCost = duration * selectedPricePerHour;
+
+            // Close booking modal
+            bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide();
+
+            // First, make the booking
+            alert('Booking slot...');
+
+            fetch("/api/book", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    slot_id: selectedSlotId,
+                    start: selectedDateTime.toISOString(),
+                    end: endDateTime.toISOString(),
+                    vehicle_number: vehicleNumber
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    // Booking successful, now show payment gateway
+                    setTimeout(() => {
+                        showPaymentModal(selectedSlotName, selectedDateTime, endDateTime, duration, totalCost);
+                    }, 500);
+                } else {
+                    alert("❌ Booking failed: " + (data.error || "Slot may already be booked for this time"));
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("❌ An error occurred while booking. Please try again.");
+            });
+        }
+
+        let paymentData = {};
+
+        function showPaymentModal(slotName, startDateTime, endDateTime, duration, totalCost) {
+            // Store booking data
+            paymentData = {
+                slot_id: selectedSlotId,
+                start: startDateTime.toISOString(),
+                end: endDateTime.toISOString()
+            };
+
+            // Update payment modal content
+            document.getElementById('payment-slot-name').textContent = slotName;
+            document.getElementById('payment-start-time').textContent = startDateTime.toLocaleString();
+            document.getElementById('payment-end-time').textContent = endDateTime.toLocaleString();
+            document.getElementById('payment-duration').textContent = duration;
+            document.getElementById('payment-total-cost').textContent = totalCost.toFixed(2);
+
+            // Show payment modal
+            const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            paymentModal.show();
+        }
+
+        function showPaymentMethod(method) {
+            // Hide all payment forms
+            document.getElementById('card-payment').style.display = 'none';
+            document.getElementById('upi-payment').style.display = 'none';
+            document.getElementById('netbanking-payment').style.display = 'none';
+            document.getElementById('wallet-payment').style.display = 'none';
+
+            // Show selected payment form
+            if (method === 'card') {
+                document.getElementById('card-payment').style.display = 'block';
+            } else if (method === 'upi') {
+                document.getElementById('upi-payment').style.display = 'block';
+            } else if (method === 'netbanking') {
+                document.getElementById('netbanking-payment').style.display = 'block';
+            } else if (method === 'wallet') {
+                document.getElementById('wallet-payment').style.display = 'block';
+            }
+        }
+
+        function processPayment() {
+            const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+            let isValid = false;
+
+            if (paymentMethod === 'card') {
+                const cardNumber = document.getElementById('card-number').value;
+                const expiryDate = document.getElementById('expiry-date').value;
+                const cvv = document.getElementById('cvv').value;
+
+                if (!cardNumber || !expiryDate || !cvv) {
+                    alert('Please fill in all card details');
+                    return;
+                }
+
+                if (!/^\d{16}$/.test(cardNumber.replace(/\s/g, ''))) {
+                    alert('Please enter a valid 16-digit card number');
+                    return;
+                }
+
+                if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+                    alert('Please enter expiry date in MM/YY format');
+                    return;
+                }
+
+                if (!/^\d{3,4}$/.test(cvv)) {
+                    alert('Please enter a valid CVV');
+                    return;
+                }
+                isValid = true;
+            } else if (paymentMethod === 'upi') {
+                const upiId = document.getElementById('upi-id').value;
+
+                if (!upiId) {
+                    alert('Please enter your UPI ID');
+                    return;
+                }
+
+                if (!/^[a-zA-Z0-9._-]+@[a-zA-Z]{3,}$/.test(upiId)) {
+                    alert('Please enter a valid UPI ID (e.g., yourname@upi)');
+                    return;
+                }
+                isValid = true;
+            } else if (paymentMethod === 'netbanking') {
+                const bankSelect = document.getElementById('bank-select').value;
+
+                if (!bankSelect) {
+                    alert('Please select a bank');
+                    return;
+                }
+                isValid = true;
+            } else if (paymentMethod === 'wallet') {
+                const walletSelect = document.getElementById('wallet-select').value;
+                const walletNumber = document.getElementById('wallet-number').value;
+
+                if (!walletSelect) {
+                    alert('Please select a wallet');
+                    return;
+                }
+
+                if (!walletNumber) {
+                    alert('Please enter your phone number or email');
+                    return;
+                }
+                isValid = true;
+            }
+
+            if (!isValid) {
+                return;
+            }
+
+            // Close payment modal
+            bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+
+            // Show processing message
+            alert('Processing payment via ' + paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1) + '...');
+
+            // Payment validation is complete - booking was already made in confirmBooking()
+            const duration = parseInt(document.getElementById('payment-duration').textContent);
+            const totalCost = parseFloat(document.getElementById('payment-total-cost').textContent);
+            const startDateTime = new Date(paymentData.start);
+            const endDateTime = new Date(paymentData.end);
+            
+            alert(`✅ Booking Confirmed! Payment Successful!\n\n📅 Date: ${startDateTime.toLocaleDateString()}\n🕐 Time: ${startDateTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${endDateTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}\n⏱️ Duration: ${duration} hour(s)\n💰 Total Cost: $${totalCost.toFixed(2)}\n\n✅ Your booking has been saved!\n📱 Check 'My Bookings' to view your booking\n👨‍💼 Admin dashboard has been updated`);
+            
+            loadSlots(); // Refresh slots
+            
+            // Reset payment form
+            document.getElementById('payment-form').reset();
+            document.getElementById('method-card').checked = true;
+            showPaymentMethod('card');
+            
+            // Navigate to My Bookings page
+            setTimeout(() => {
+                window.location.href = '{{ url_for("my_bookings_page") }}';
+            }, 1500);
+        }
+
+        async function loadBookings() {
+            const res = await fetch("/api/my_bookings");
+            const bookings = await res.json();
+            const div = document.getElementById("bookings");
+            div.innerHTML = "";
+
+            if (bookings.length === 0) {
+                div.innerHTML = '<div class="col-12"><div class="alert alert-info text-center">No bookings found.</div></div>';
+                return;
+            }
+
+            bookings.forEach(b => {
+                const col = document.createElement("div");
+                col.className = "col-md-6 mb-4";
+                const card = document.createElement("div");
+                card.className = "card card-custom";
+                
+                const endTime = new Date(b.end_time);
+                const now = new Date();
+                const isUpcoming = endTime > now;
+                const isCancelled = b.status === "cancelled";
+                
+                let buttonHTML = '';
+                let statusBadge = '';
+                
+                if (isCancelled) {
+                    statusBadge = '<span class="badge bg-danger">Cancelled</span>';
+                    buttonHTML = '';
+                } else if (isUpcoming) {
+                    statusBadge = '<span class="badge bg-success">Upcoming</span>';
+                    buttonHTML = `<button class="btn btn-danger btn-sm" onclick="cancelBooking(${b.id}, ${b.slot_number})">Cancel Booking</button>`;
+                } else {
+                    statusBadge = '<span class="badge bg-secondary">Completed</span>';
+                    buttonHTML = '';
+                }
+                
+                card.innerHTML = `
+                    <div class="card-body">
+                        <h5 class="card-title">Slot ${b.slot_number}</h5>
+                        <p class="card-text">Start: ${new Date(b.start_time).toLocaleString()}</p>
+                        <p class="card-text">End: ${new Date(b.end_time).toLocaleString()}</p>
+                        <p class="card-text">Status: ${statusBadge}</p>
+                        ${buttonHTML}
+                    </div>
+                `;
+                col.appendChild(card);
+                div.appendChild(col);
+            });
+        }
+
+        function cancelBooking(bookingId, slotNumber) {
+            if (confirm(`Are you sure you want to cancel booking for Slot ${slotNumber}?`)) {
+                fetch("/api/cancel_booking", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        booking_id: bookingId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(`✅ Booking for Slot ${slotNumber} cancelled successfully!`);
+                        loadSlots(); // Refresh slots
+                        loadBookings(); // Refresh bookings
+                    } else {
+                        alert("❌ Failed to cancel booking: " + (data.error || "Unknown error"));
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("❌ An error occurred while cancelling the booking.");
+                });
+            }
+        }
+
+        // Initialize the page
+        loadAllSlots(); // Load all slots by default
+
+        // Auto-refresh slots every 5 seconds to show real-time ESP32 sensor data
+        setInterval(loadSlots, 5000);
+
+        // Reset form when modal is closed
+        document.getElementById('bookingModal').addEventListener('hidden.bs.modal', function () {
+            document.getElementById('booking-form').reset();
+            document.getElementById('booking-details').innerHTML = '';
+            selectedSlotId = null;
+            selectedSlotName = null;
+            selectedPricePerHour = null;
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

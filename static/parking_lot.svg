@@ -1,0 +1,203 @@
+<svg viewBox="0 0 1000 450" xmlns="http://www.w3.org/2000/svg">
+  <!-- Definitions for gradients and filters -->
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8f9fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e9ecef;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- EV Charging gradient -->
+    <linearGradient id="evGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00d084;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00a86b;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Handicapped gradient -->
+    <linearGradient id="handicappedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e90ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0066cc;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Regular gradient -->
+    <linearGradient id="regularGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a8e6cf;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#56d5a6;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Shadow filter -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+    
+    <!-- Glow filter -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Arrow marker definition -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+      <polygon points="0 0, 10 5, 0 10" fill="#2c3e50"/>
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1000" height="450" fill="url(#bgGradient)"/>
+  
+  <!-- Decorative top accent -->
+  <rect x="80" y="60" width="840" height="4" fill="#ff6b6b" rx="2" opacity="0.3"/>
+  
+  <!-- Main parking lot border with shadow -->
+  <rect x="80" y="80" width="840" height="280" fill="white" stroke="#34495e" stroke-width="3" rx="15" filter="url(#shadow)"/>
+  
+  <!-- Entry arrow and text -->
+  <g transform="translate(0, 0)">
+    <text x="10" y="145" font-size="16" font-weight="bold" fill="#2c3e50">Entry</text>
+    <path d="M 35 120 L 35 165" stroke="#2c3e50" stroke-width="2.5" marker-end="url(#arrowhead)" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Car icon at entry -->
+  <g transform="translate(48, 98)" filter="url(#shadow)">
+    <rect x="0" y="0" width="30" height="20" fill="#34495e" stroke="none" rx="3" opacity="0.9"/>
+    <circle cx="8" cy="18" r="3.5" fill="#2c3e50"/>
+    <circle cx="22" cy="18" r="3.5" fill="#2c3e50"/>
+    <rect x="2" y="2" width="12" height="8" fill="#3498db" opacity="0.6"/>
+  </g>
+  
+  <!-- Exit arrow and text -->
+  <g transform="translate(0, 0)">
+    <text x="905" y="345" font-size="16" font-weight="bold" fill="#2c3e50">Exit</text>
+    <path d="M 955 320 L 955 365" stroke="#2c3e50" stroke-width="2.5" marker-start="url(#arrowhead)" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Car icon at exit -->
+  <g transform="translate(948, 298)" filter="url(#shadow)">
+    <rect x="0" y="0" width="30" height="20" fill="#34495e" stroke="none" rx="3" opacity="0.9"/>
+    <circle cx="8" cy="18" r="3.5" fill="#2c3e50"/>
+    <circle cx="22" cy="18" r="3.5" fill="#2c3e50"/>
+    <rect x="2" y="2" width="12" height="8" fill="#3498db" opacity="0.6"/>
+  </g>
+  
+  <!-- TOP ROW LABEL with icon -->
+  <g transform="translate(85, 60)">
+    <text x="0" y="0" font-size="13" font-weight="bold" fill="#2c3e50">⚡ EV Charging Slots</text>
+  </g>
+  
+  <!-- TOP ROW: Slots 6, 10, 8, 7, 9 -->
+  
+  <!-- Slot 6 (EV Charging) -->
+  <g id="slot-6" class="parking-slot" filter="url(#shadow)">
+    <rect x="110" y="100" width="60" height="60" fill="url(#evGradient)" stroke="#00a86b" stroke-width="2.5" rx="8"/>
+    <circle cx="140" cy="105" r="5" fill="#ffffff" opacity="0.4"/>
+    <text x="140" y="138" font-size="26" font-weight="bold" text-anchor="middle" fill="#ffffff">6</text>
+  </g>
+  
+  <!-- Slot 10 (EV Charging) -->
+  <g id="slot-10" class="parking-slot" filter="url(#shadow)">
+    <rect x="200" y="100" width="60" height="60" fill="url(#evGradient)" stroke="#00a86b" stroke-width="2.5" rx="8"/>
+    <circle cx="230" cy="105" r="5" fill="#ffffff" opacity="0.4"/>
+    <text x="230" y="138" font-size="26" font-weight="bold" text-anchor="middle" fill="#ffffff">10</text>
+  </g>
+  
+  <!-- Slot 8 (EV Charging) -->
+  <g id="slot-8" class="parking-slot" filter="url(#shadow)">
+    <rect x="290" y="100" width="60" height="60" fill="url(#evGradient)" stroke="#00a86b" stroke-width="2.5" rx="8"/>
+    <circle cx="320" cy="105" r="5" fill="#ffffff" opacity="0.4"/>
+    <text x="320" y="138" font-size="26" font-weight="bold" text-anchor="middle" fill="#ffffff">8</text>
+  </g>
+  
+  <!-- Slot 7 (Regular) -->
+  <g id="slot-7" class="parking-slot" filter="url(#shadow)">
+    <rect x="380" y="100" width="60" height="60" fill="url(#regularGradient)" stroke="#56d5a6" stroke-width="2.5" rx="8"/>
+    <circle cx="410" cy="105" r="5" fill="#ffffff" opacity="0.4"/>
+    <text x="410" y="138" font-size="26" font-weight="bold" text-anchor="middle" fill="#ffffff">7</text>
+  </g>
+  
+  <!-- Slot 9 (Regular) -->
+  <g id="slot-9" class="parking-slot" filter="url(#shadow)">
+    <rect x="470" y="100" width="60" height="60" fill="url(#regularGradient)" stroke="#56d5a6" stroke-width="2.5" rx="8"/>
+    <circle cx="500" cy="105" r="5" fill="#ffffff" opacity="0.4"/>
+    <text x="500" y="138" font-size="26" font-weight="bold" text-anchor="middle" fill="#ffffff">9</text>
+  </g>
+  
+  <!-- BOTTOM ROW LABEL with icon -->
+  <g transform="translate(85, 230)">
+    <text x="0" y="0" font-size="13" font-weight="bold" fill="#2c3e50">♿ Handicapped Accessible Slots</text>
+  </g>
+  
+  <!-- BOTTOM ROW: Slots 1, 2, 3, 4, 5 -->
+  
+  <!-- Slot 1 (Handicapped) -->
+  <g id="slot-1" class="parking-slot" filter="url(#shadow)">
+    <rect x="110" y="250" width="60" height="60" fill="url(#handicappedGradient)" stroke="#0066cc" stroke-width="2.5" rx="8"/>
+    <circle cx="140" cy="255" r="5" fill="#ffffff" opacity="0.4"/>
+    <text x="140" y="288" font-size="26" font-weight="bold" text-anchor="middle" fill="#ffffff">1</text>
+    <!-- Enhanced wheelchair symbol -->
+    <g transform="translate(140, 268)">
+      <circle cx="0" cy="-2" r="2.5" fill="#ffffff"/>
+      <rect x="-2.5" y="1" width="5" height="3.5" fill="#ffffff"/>
+    </g>
+  </g>
+  
+  <!-- Slot 2 (Handicapped) -->
+  <g id="slot-2" class="parking-slot" filter="url(#shadow)">
+    <rect x="200" y="250" width="60" height="60" fill="url(#handicappedGradient)" stroke="#0066cc" stroke-width="2.5" rx="8"/>
+    <circle cx="230" cy="255" r="5" fill="#ffffff" opacity="0.4"/>
+    <text x="230" y="288" font-size="26" font-weight="bold" text-anchor="middle" fill="#ffffff">2</text>
+    <!-- Enhanced wheelchair symbol -->
+    <g transform="translate(230, 268)">
+      <circle cx="0" cy="-2" r="2.5" fill="#ffffff"/>
+      <rect x="-2.5" y="1" width="5" height="3.5" fill="#ffffff"/>
+    </g>
+  </g>
+  
+  <!-- Slot 3 (Handicapped) -->
+  <g id="slot-3" class="parking-slot" filter="url(#shadow)">
+    <rect x="290" y="250" width="60" height="60" fill="url(#handicappedGradient)" stroke="#0066cc" stroke-width="2.5" rx="8"/>
+    <circle cx="320" cy="255" r="5" fill="#ffffff" opacity="0.4"/>
+    <text x="320" y="288" font-size="26" font-weight="bold" text-anchor="middle" fill="#ffffff">3</text>
+    <!-- Enhanced wheelchair symbol -->
+    <g transform="translate(320, 268)">
+      <circle cx="0" cy="-2" r="2.5" fill="#ffffff"/>
+      <rect x="-2.5" y="1" width="5" height="3.5" fill="#ffffff"/>
+    </g>
+  </g>
+  
+  <!-- Slot 4 (Regular) -->
+  <g id="slot-4" class="parking-slot" filter="url(#shadow)">
+    <rect x="380" y="250" width="60" height="60" fill="url(#regularGradient)" stroke="#56d5a6" stroke-width="2.5" rx="8"/>
+    <circle cx="410" cy="255" r="5" fill="#ffffff" opacity="0.4"/>
+    <text x="410" y="288" font-size="26" font-weight="bold" text-anchor="middle" fill="#ffffff">4</text>
+  </g>
+  
+  <!-- Slot 5 (Regular) -->
+  <g id="slot-5" class="parking-slot" filter="url(#shadow)">
+    <rect x="470" y="250" width="60" height="60" fill="url(#regularGradient)" stroke="#56d5a6" stroke-width="2.5" rx="8"/>
+    <circle cx="500" cy="255" r="5" fill="#ffffff" opacity="0.4"/>
+    <text x="500" y="288" font-size="26" font-weight="bold" text-anchor="middle" fill="#ffffff">5</text>
+  </g>
+  
+  <!-- Enhanced Legend on the right side -->
+  <g transform="translate(600, 100)" filter="url(#glow)">
+    <rect x="-8" y="-15" width="280" height="220" fill="#ffffff" stroke="#e0e0e0" stroke-width="2" rx="8" opacity="0.95"/>
+    
+    <text x="0" y="0" font-size="14" font-weight="bold" fill="#2c3e50">Legend:</text>
+    
+    <!-- EV Charging -->
+    <rect x="0" y="15" width="22" height="22" fill="url(#evGradient)" stroke="#00a86b" stroke-width="1.5" rx="3"/>
+    <text x="32" y="32" font-size="12" fill="#2c3e50" font-weight="500">EV Charging (6, 8, 10)</text>
+    
+    <!-- Handicapped -->
+    <rect x="0" y="50" width="22" height="22" fill="url(#handicappedGradient)" stroke="#0066cc" stroke-width="1.5" rx="3"/>
+    <text x="32" y="67" font-size="12" fill="#2c3e50" font-weight="500">Handicapped (1, 2, 3)</text>
+    
+    <!-- Regular -->
+    <rect x="0" y="85" width="22" height="22" fill="url(#regularGradient)" stroke="#56d5a6" stroke-width="1.5" rx="3"/>
+    <text x="32" y="102" font-size="12" fill="#2c3e50" font-weight="500">Regular (4, 5, 7, 9)</text>
+  </g>
+  
+</svg>

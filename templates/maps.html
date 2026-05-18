@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parking Map</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&libraries=places&callback=initMap"></script>
+</head>
+<body>
+<div id="map"></div>
+
+<script>
+const map = new google.maps.Map(document.getElementById("map"), {
+  zoom: 17,
+  center: {lat: 17.6868, lng: 83.2185}
+});
+
+fetch("/api/map_slots")
+.then(res => res.json())
+.then(slots => {
+  slots.forEach(s => {
+    const color =
+      s.status === "empty" ? "green" :
+      s.status === "occupied" ? "red" : "yellow";
+
+    new google.maps.Marker({
+      map: map,
+      position: {lat: s.lat, lng: s.lng},
+      label: `${s.slot}`,
+      icon: `http://maps.google.com/mapfiles/ms/icons/${color}-dot.png`
+    });
+  });
+});
+</script>
+</body>
+</html>

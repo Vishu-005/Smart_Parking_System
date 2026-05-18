@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings - Smart Parking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .navbar-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-custom {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">Smart Parking</a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">Welcome, {{ current_user.email }}!</span>
+                <a class="nav-link" href="{{ url_for('my_bookings_page') }}">My Bookings</a>
+                {% if current_user.role == 'admin' %}
+                <a class="nav-link" href="{{ url_for('admin') }}">Admin</a>
+                {% endif %}
+                <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">My Bookings</h1>
+
+        <!-- Booked Slots Section -->
+        <div class="card card-custom">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Your Booked Slots</h5>
+            </div>
+            <div class="card-body">
+                <div id="bookings-container">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Loading your booked slots...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadBookings() {
+            try {
+                // Add cache-busting parameter to ensure fresh data
+                const response = await fetch('/api/my_bookings?t=' + new Date().getTime());
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch bookings');
+                }
+                
+                const bookings = await response.json();
+                const container = document.getElementById('bookings-container');
+
+                if (!Array.isArray(bookings) || bookings.length === 0) {
+                    container.innerHTML = '<div class="alert alert-info text-center"><h5>No Booked Slots</h5><p>You haven\'t booked any parking slots yet.</p></div>';
+                    return;
+                }
+
+                let html = '<div class="row">';
+                const now = new Date();
+
+                bookings.forEach(booking => {
+                    const startTime = new Date(booking.start_time);
+                    const endTime = new Date(booking.end_time);
+                    let status = 'Upcoming';
+                    let statusClass = 'text-primary';
+                    let statusIcon = 'bi-clock';
+                    let cancelButton = '';
+
+                    if (booking.status === 'cancelled') {
+                        status = 'Cancelled';
+                        statusClass = 'text-danger';
+                        statusIcon = 'bi-x-circle';
+                    } else if (endTime < now) {
+                        status = 'Completed';
+                        statusClass = 'text-success';
+                        statusIcon = 'bi-check-circle';
+                    } else if (startTime <= now && endTime > now) {
+                        status = 'Active';
+                        statusClass = 'text-warning';
+                        statusIcon = 'bi-play-circle';
+                    } else if (endTime > now) {
+                        // Upcoming booking - show cancel button
+                        cancelButton = `<button class="btn btn-danger btn-sm w-100 mt-2" onclick="cancelBooking(${booking.id}, ${booking.slot_number})">Cancel Booking</button>`;
+                    }
+
+                    html += `
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center">
+                                    <div class="mb-3">
+                                        <i class="bi bi-car-front-fill text-primary" style="font-size: 2rem;"></i>
+                                    </div>
+                                    <h6 class="card-title">Slot ${booking.slot_number}</h6>
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Vehicle: ${booking.vehicle_number || 'N/A'}</small>
+                                        <small class="text-muted d-block">Start: ${startTime.toLocaleString()}</small>
+                                        <small class="text-muted d-block">End: ${endTime.toLocaleString()}</small>
+                                    </div>
+                                    <span class="badge ${statusClass} fs-6">
+                                        <i class="bi ${statusIcon} me-1"></i>${status}
+                                    </span>
+                                    ${cancelButton}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (error) {
+                document.getElementById('bookings-container').innerHTML = '<div class="alert alert-danger text-center"><p>Error loading booked slots. Please try again.</p></div>';
+                console.error('Error loading bookings:', error);
+            }
+        }
+
+        function cancelBooking(bookingId, slotNumber) {
+            if (confirm(`Are you sure you want to cancel booking for Slot ${slotNumber}?`)) {
+                fetch("/api/cancel_booking", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        booking_id: bookingId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(`✅ Booking for Slot ${slotNumber} cancelled successfully!`);
+                        loadBookings(); // Refresh bookings to show cancelled status
+                    } else {
+                        alert("❌ Failed to cancel booking: " + (data.error || "Unknown error"));
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("❌ An error occurred while cancelling the booking.");
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadBookings);
+
+        // Also load bookings when page becomes visible (e.g., when returning from payment)
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                loadBookings();
+            }
+        });
+
+        // Load bookings on page load
+        window.addEventListener('pageshow', function(event) {
+            loadBookings();
+        });
+    </script>
+</body>
+</html>
