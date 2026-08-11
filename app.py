@@ -17,7 +17,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import or_
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:Vishu005!@localhost:5432/parking_db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "your-secret-key-here"  # Change this to a random secret key
 app.config['ESP_API_KEY'] = os.environ.get('ESP_API_KEY', 'ESP32_SECRET_KEY') # Use a secure key in production
