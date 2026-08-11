@@ -5,8 +5,7 @@ import cv2
 import re
 
 # scheduler and HTTP client for exit notifications
-from apscheduler.schedulers.background import BackgroundScheduler
-import atexit
+
 import requests
 
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory
@@ -667,11 +666,11 @@ def _expire_bookings_job():
 
 
 # initialize and start scheduler after app context is ready
-scheduler = BackgroundScheduler()
-scheduler.add_job(_expire_bookings_job, 'interval', seconds=app.config['BOOKING_EXPIRY_INTERVAL'], id='expire-bookings')
-scheduler.start()
-# ensure the scheduler is shut down when the process exits
-atexit.register(lambda: scheduler.shutdown())
+# scheduler = BackgroundScheduler()
+# scheduler.add_job(_expire_bookings_job, 'interval', seconds=app.config['BOOKING_EXPIRY_INTERVAL'], id='expire-bookings')
+# scheduler.start()
+# # ensure the scheduler is shut down when the process exits
+# atexit.register(lambda: scheduler.shutdown())
 
 
 # ================= ESP32 UPDATE ENDPOINT =================
