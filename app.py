@@ -600,9 +600,21 @@ def verify_plate():
     }
     
     if is_authorized:
-        response["booking_details"] = booking_info
+    response["booking_details"] = booking_info
+
+    # Create gate command for ESP32
+    gate_command_created = create_gate_open_command(
+        plate_number,
+        booking_info
+    )
+
+    response["gate_command"] = (
+        "OPEN" if gate_command_created else "ERROR"
+    )
+
     else:
         response["error"] = booking_info.get("error")
+        response["gate_command"] = "CLOSED"
     
     return jsonify(response), 200
 
@@ -835,6 +847,60 @@ def upload_plate():
 
     # Store record in DB
     rec = PlateImage(
+        # -------------------------------------------------
+# VERIFY OCR RESULT AGAINST ACTIVE BOOKING
+# -------------------------------------------------
+
+authorized = False
+booking_info = None
+gate_command_created = False
+
+if plate_text:
+    cleaned_plate = clean_plate_text(plate_text)
+
+    if cleaned_plate:
+        print(
+            f"🔍 Checking extracted vehicle number: {cleaned_plate}"
+        )
+
+        authorized, booking_info = verify_booking_for_plate(
+            cleaned_plate
+        )
+
+        if authorized:
+            print(
+                f"✅ Vehicle {cleaned_plate} has an active booking."
+            )
+
+            gate_command_created = create_gate_open_command(
+                cleaned_plate,
+                booking_info
+            )
+
+            plate_text = cleaned_plate
+
+            if gate_command_created:
+                notes = (
+                    f"{notes or ''} | "
+                    "AUTHORIZED - GATE OPEN COMMAND CREATED"
+                )
+            else:
+                notes = (
+                    f"{notes or ''} | "
+                    "AUTHORIZED - GATE COMMAND FAILED"
+                )
+
+        else:
+            print(
+                f"❌ No active booking found for {cleaned_plate}"
+            )
+
+            plate_text = cleaned_plate
+
+            notes = (
+                f"{notes or ''} | "
+                "DENIED - NO ACTIVE BOOKING"
+            )
         slot_id=slot_id,
         original_path=os.path.relpath(saved_path),
         processed_path=os.path.relpath(os.path.join(app.config['PROCESSED_FOLDER'], processed_name)) if processed_name else None,
@@ -845,7 +911,16 @@ def upload_plate():
     db.session.add(rec)
     db.session.commit()
 
-    return jsonify({'message': 'uploaded', 'id': rec.id, 'plate_text': plate_text, 'processed_path': rec.processed_path}), 201
+return jsonify({
+    'message': 'uploaded',
+    'id': rec.id,
+    'plate_text': plate_text,
+    'processed_path': rec.processed_path,
+    'authorized': authorized,
+    'gate_command': (
+        'OPEN' if gate_command_created else 'CLOSED'
+    )
+}), 201
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
