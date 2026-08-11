@@ -617,6 +617,66 @@ def verify_plate():
         response["gate_command"] = "CLOSED"
     
     return jsonify(response), 200
+    # ================= ESP32 GATE CONTROL =================
+
+@app.route("/api/gate_control", methods=["GET"])
+def gate_control():
+    """
+    ESP32 polls this endpoint to check whether
+    the gate should be opened.
+    """
+
+    # Check ESP32 API key
+    api_key = request.headers.get("X-API-Key")
+
+    if api_key != app.config["ESP_API_KEY"]:
+        return jsonify({
+            "command": "CLOSED",
+            "error": "Unauthorized"
+        }), 401
+
+    try:
+        # Find the oldest unconsumed OPEN command
+        command = GateCommand.query.filter_by(
+            command="OPEN",
+            consumed=False
+        ).order_by(
+            GateCommand.created_at.asc()
+        ).first()
+
+        # No pending command
+        if not command:
+            return jsonify({
+                "command": "CLOSED"
+            }), 200
+
+        vehicle_number = command.vehicle_number
+        booking_id = command.booking_id
+
+        # Mark command as consumed
+        command.consumed = True
+        db.session.commit()
+
+        print(
+            f"🚪 Sending OPEN command to ESP32 "
+            f"for vehicle {vehicle_number}"
+        )
+
+        return jsonify({
+            "command": "OPEN",
+            "vehicle_number": vehicle_number,
+            "booking_id": booking_id
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+
+        print(f"❌ Gate control error: {e}")
+
+        return jsonify({
+            "command": "CLOSED",
+            "error": str(e)
+        }), 500
 
 # ================== IMAGE UPLOAD & PROCESSING ================
 
