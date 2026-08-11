@@ -87,6 +87,14 @@ class PlateImage(db.Model):
 
     slot = db.relationship('Slot', backref='plate_images')
 
+class GateCommand(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    command = db.Column(db.String(20), nullable=False, default="CLOSED")
+    vehicle_number = db.Column(db.String(20))
+    booking_id = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    consumed = db.Column(db.Boolean, default=False)
+
 @login_manager.user_loader
 def load_user(user_id):
     try:
@@ -160,7 +168,34 @@ def verify_booking_for_plate(plate_number):
 
 # ---------------- INIT ----------------
 
+
 # ---------------- ROUTES ----------------
+def create_gate_open_command(plate_number, booking_info):
+    """
+    Create a one-time OPEN command for the ESP32.
+    """
+    try:
+        command = GateCommand(
+            command="OPEN",
+            vehicle_number=plate_number,
+            booking_id=booking_info.get("booking_id"),
+            consumed=False
+        )
+
+        db.session.add(command)
+        db.session.commit()
+
+        print(
+            f"🚪 Gate OPEN command created for vehicle "
+            f"{plate_number}, booking {booking_info.get('booking_id')}"
+        )
+
+        return True
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Failed to create gate command: {e}")
+        return False
 
 @app.route("/")
 @login_required
