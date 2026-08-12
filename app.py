@@ -31,8 +31,8 @@ app.config['ESP32_EXIT_URL'] = f"http://{app.config['ESP32_IP']}/open_exit_gate"
 app.config['BOOKING_EXPIRY_INTERVAL'] = 30  # seconds between checks
 
 # Upload folders
-app.config['UPLOAD_FOLDER'] = os.path.join(app.instance_path, 'uploads')
-app.config['PROCESSED_FOLDER'] = os.path.join('static', 'processed')
+app.config['UPLOAD_FOLDER'] = '/tmp/uploads'
+app.config['PROCESSED_FOLDER'] = '/tmp/processed'
 
 # Ensure folders exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -612,11 +612,11 @@ def verify_plate():
         "OPEN" if gate_command_created else "ERROR"
     )
 
-    else:
-        response["error"] = booking_info.get("error")
-        response["gate_command"] = "CLOSED"
-    
-    return jsonify(response), 200
+else:
+    response["error"] = booking_info.get("error")
+    response["gate_command"] = "CLOSED"
+
+return jsonify(response), 200
     # ================= ESP32 GATE CONTROL =================
 
 @app.route("/api/gate_control", methods=["GET"])
@@ -708,7 +708,7 @@ with app.app_context():
             db.session.commit()
             # Create default admin user
             hashed_password = generate_password_hash("admin123", method="pbkdf2:sha256")
-            admin = User(email="admin@gmail.com", password=hashed_password, role="admin")
+            admin = User(username="admin",email="admin@gmail.com",password=hashed_password,gender="",role="admin")
             db.session.add(admin)
             db.session.commit()
             print("Database initialized successfully!")
@@ -911,6 +911,10 @@ def upload_plate():
 # VERIFY OCR RESULT AGAINST ACTIVE BOOKING
 # -------------------------------------------------
 
+# -------------------------------------------------
+# VERIFY OCR RESULT AGAINST ACTIVE BOOKING
+# -------------------------------------------------
+
 authorized = False
 booking_info = None
 gate_command_created = False
@@ -961,15 +965,31 @@ if plate_text:
                 f"{notes or ''} | "
                 "DENIED - NO ACTIVE BOOKING"
             )
-        slot_id=slot_id,
-        original_path=os.path.relpath(saved_path),
-        processed_path=os.path.relpath(os.path.join(app.config['PROCESSED_FOLDER'], processed_name)) if processed_name else None,
-        plate_text=plate_text,
-        confidence=confidence,
-        notes=notes
-    )
-    db.session.add(rec)
-    db.session.commit()
+
+# -------------------------------------------------
+# STORE OCR RESULT IN DATABASE
+# -------------------------------------------------
+
+rec = PlateImage(
+    slot_id=slot_id,
+    original_path=os.path.relpath(saved_path),
+    processed_path=(
+        os.path.relpath(
+            os.path.join(
+                app.config['PROCESSED_FOLDER'],
+                processed_name
+            )
+        )
+        if processed_name
+        else None
+    ),
+    plate_text=plate_text,
+    confidence=confidence,
+    notes=notes
+)
+
+db.session.add(rec)
+db.session.commit()
 
 return jsonify({
     'message': 'uploaded',
