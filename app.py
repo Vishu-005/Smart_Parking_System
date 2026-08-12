@@ -600,24 +600,24 @@ def verify_plate():
     }
     
     if is_authorized:
-    response["booking_details"] = booking_info
+        response["booking_details"] = booking_info
 
     # Create gate command for ESP32
-    gate_command_created = create_gate_open_command(
-        plate_number,
-        booking_info
-    )
+        gate_command_created = create_gate_open_command(
+            plate_number,
+            booking_info
+        )
 
-    response["gate_command"] = (
-        "OPEN" if gate_command_created else "ERROR"
-    )
+        response["gate_command"] = (
+            "OPEN" if gate_command_created else "ERROR"
+        )
 
-else:
-    response["error"] = booking_info.get("error")
-    response["gate_command"] = "CLOSED"
-
-return jsonify(response), 200
-    # ================= ESP32 GATE CONTROL =================
+    else:
+        response["error"] = booking_info.get("error")
+        response["gate_command"] = "CLOSED"
+    
+    return jsonify(response), 200
+        # ================= ESP32 GATE CONTROL =================
 
 @app.route("/api/gate_control", methods=["GET"])
 def gate_control():
@@ -905,13 +905,7 @@ def upload_plate():
         notes = f'processing_error: {e}'
         print('Error during image processing:', e)
 
-    # Store record in DB
-    rec = PlateImage(
-        # -------------------------------------------------
-# VERIFY OCR RESULT AGAINST ACTIVE BOOKING
-# -------------------------------------------------
-
-# -------------------------------------------------
+   # -------------------------------------------------
 # VERIFY OCR RESULT AGAINST ACTIVE BOOKING
 # -------------------------------------------------
 
