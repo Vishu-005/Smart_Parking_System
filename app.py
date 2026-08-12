@@ -905,96 +905,96 @@ def upload_plate():
         notes = f'processing_error: {e}'
         print('Error during image processing:', e)
 
-   # -------------------------------------------------
-# VERIFY OCR RESULT AGAINST ACTIVE BOOKING
-# -------------------------------------------------
+    # -------------------------------------------------
+    # VERIFY OCR RESULT AGAINST ACTIVE BOOKING
+    # -------------------------------------------------
 
-authorized = False
-booking_info = None
-gate_command_created = False
+    authorized = False
+    booking_info = None
+    gate_command_created = False
 
-if plate_text:
-    cleaned_plate = clean_plate_text(plate_text)
+    if plate_text:
+        cleaned_plate = clean_plate_text(plate_text)
 
-    if cleaned_plate:
-        print(
-            f"🔍 Checking extracted vehicle number: {cleaned_plate}"
-        )
-
-        authorized, booking_info = verify_booking_for_plate(
-            cleaned_plate
-        )
-
-        if authorized:
+        if cleaned_plate:
             print(
-                f"✅ Vehicle {cleaned_plate} has an active booking."
+                f"🔍 Checking extracted vehicle number: {cleaned_plate}"
             )
 
-            gate_command_created = create_gate_open_command(
-                cleaned_plate,
-                booking_info
+            authorized, booking_info = verify_booking_for_plate(
+                cleaned_plate
             )
 
-            plate_text = cleaned_plate
-
-            if gate_command_created:
-                notes = (
-                    f"{notes or ''} | "
-                    "AUTHORIZED - GATE OPEN COMMAND CREATED"
+            if authorized:
+                print(
+                    f"✅ Vehicle {cleaned_plate} has an active booking."
                 )
+
+                gate_command_created = create_gate_open_command(
+                    cleaned_plate,
+                    booking_info
+                )
+
+                plate_text = cleaned_plate
+
+                if gate_command_created:
+                    notes = (
+                        f"{notes or ''} | "
+                        "AUTHORIZED - GATE OPEN COMMAND CREATED"
+                    )
+                else:
+                    notes = (
+                        f"{notes or ''} | "
+                        "AUTHORIZED - GATE COMMAND FAILED"
+                    )
+
             else:
-                notes = (
-                    f"{notes or ''} | "
-                    "AUTHORIZED - GATE COMMAND FAILED"
+                print(
+                    f"❌ No active booking found for {cleaned_plate}"
                 )
 
-        else:
-            print(
-                f"❌ No active booking found for {cleaned_plate}"
+                plate_text = cleaned_plate
+
+                notes = (
+                    f"{notes or ''} | "
+                    "DENIED - NO ACTIVE BOOKING"
+                )
+
+    # -------------------------------------------------
+    # STORE OCR RESULT IN DATABASE
+    # -------------------------------------------------
+
+    rec = PlateImage(
+        slot_id=slot_id,
+        original_path=os.path.relpath(saved_path),
+        processed_path=(
+            os.path.relpath(
+                os.path.join(
+                    app.config['PROCESSED_FOLDER'],
+                    processed_name
+                )
             )
-
-            plate_text = cleaned_plate
-
-            notes = (
-                f"{notes or ''} | "
-                "DENIED - NO ACTIVE BOOKING"
-            )
-
-# -------------------------------------------------
-# STORE OCR RESULT IN DATABASE
-# -------------------------------------------------
-
-rec = PlateImage(
-    slot_id=slot_id,
-    original_path=os.path.relpath(saved_path),
-    processed_path=(
-        os.path.relpath(
-            os.path.join(
-                app.config['PROCESSED_FOLDER'],
-                processed_name
-            )
-        )
-        if processed_name
-        else None
-    ),
-    plate_text=plate_text,
-    confidence=confidence,
-    notes=notes
-)
-
-db.session.add(rec)
-db.session.commit()
-
-return jsonify({
-    'message': 'uploaded',
-    'id': rec.id,
-    'plate_text': plate_text,
-    'processed_path': rec.processed_path,
-    'authorized': authorized,
-    'gate_command': (
-        'OPEN' if gate_command_created else 'CLOSED'
+            if processed_name
+            else None
+        ),
+        plate_text=plate_text,
+        confidence=confidence,
+        notes=notes
     )
-}), 201
+
+    db.session.add(rec)
+    db.session.commit()
+
+    return jsonify({
+        'message': 'uploaded',
+        'id': rec.id,
+        'plate_text': plate_text,
+        'processed_path': rec.processed_path,
+        'authorized': authorized,
+        'gate_command': (
+            'OPEN' if gate_command_created else 'CLOSED'
+        )
+    }), 201
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
